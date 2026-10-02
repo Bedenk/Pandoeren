@@ -1,0 +1,41 @@
+name: Build Windows exe
+
+# Draait op een door GitHub geleverde Windows-machine (gratis voor publieke
+# repos, en ruim binnen de gratis minuten voor een privé-repo van deze
+# omvang) -- we hebben zelf dus geen Windows nodig om pandoeren.exe te
+# bouwen. Draait automatisch bij elke push naar main, en is ook met de
+# hand te starten (Actions-tab -> "Build Windows exe" -> "Run workflow"),
+# bijvoorbeeld om zonder nieuwe code-wijziging toch een verse build te
+# krijgen.
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Installeer dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Bouw pandoeren.exe
+        run: >
+          pyinstaller --onefile --windowed --name pandoeren
+          --add-data "assets;assets"
+          client_qt.py
+
+      - name: Upload pandoeren.exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: pandoeren-windows
+          path: dist/pandoeren.exe
