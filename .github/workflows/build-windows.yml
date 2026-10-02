@@ -1,5 +1,3 @@
-name: Build Windows exe
-
 # Draait op een door GitHub geleverde Windows-machine (gratis voor publieke
 # repos, en ruim binnen de gratis minuten voor een privé-repo van deze
 # omvang) -- we hebben zelf dus geen Windows nodig om pandoeren.exe te
@@ -7,7 +5,7 @@ name: Build Windows exe
 # hand te starten (Actions-tab -> "Build Windows exe" -> "Run workflow"),
 # bijvoorbeeld om zonder nieuwe code-wijziging toch een verse build te
 # krijgen.
-name: Build Windows exe
+name: Build Windows en Linux exe
 
 on:
   push:
@@ -18,38 +16,61 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Installeer dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pyinstaller
-
       - name: Bouw pandoeren.exe
         run: >
           pyinstaller --onefile --windowed --name pandoeren
           --add-data "assets;assets"
           client_qt.py
-
-      - name: Upload pandoeren.exe als artifact (voor jezelf)
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: pandoeren-windows
           path: dist/pandoeren.exe
-
-      - name: Publiceer pandoeren.exe als publieke download
+      - name: Publiceer op release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: "Laatste Windows-build"
-          body: "Automatisch gebouwd door GitHub Actions bij elke update. Download pandoeren.exe hieronder -- geen account of installatie nodig."
+          name: "Laatste build"
+          body: "Automatisch gebouwd door GitHub Actions. Windows: pandoeren.exe. Linux: pandoeren-linux."
           prerelease: true
           files: dist/pandoeren.exe
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Installeer dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+      - name: Bouw pandoeren-linux
+        run: >
+          pyinstaller --onefile --windowed --name pandoeren-linux
+          --add-data "assets:assets"
+          client_qt.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pandoeren-linux
+          path: dist/pandoeren-linux
+      - name: Publiceer op release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: "Laatste build"
+          prerelease: true
+          files: dist/pandoeren-linux
