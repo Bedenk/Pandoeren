@@ -33,7 +33,7 @@ from PySide6.QtCore import Qt, QObject, Signal
 from PySide6.QtGui import QColor, QPen, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel,
-    QPushButton, QComboBox, QSpinBox, QListWidget, QListWidgetItem, QGroupBox,
+    QPushButton, QComboBox, QListWidget, QListWidgetItem, QGroupBox,
     QMessageBox, QAbstractButton, QSizePolicy,
 )
 
@@ -341,18 +341,18 @@ class Hoofdvenster(QWidget):
         layout.addWidget(self.slagen_log)
         self._gelogde_slagen = 0  # hoeveel slagen van deze ronde al in slagen_log staan
 
+        # De keuzelijst zelf bepaalt welke boden geldig zijn (zie
+        # _vraag_bieden/mogelijke_boden): elk item is al een los, compleet
+        # bod (ook een punten-bod zoals "140 punten"), dus een los veld om
+        # een aantal punten in te vullen is niet meer nodig -- en dus is een
+        # ongeldig of niet-hoger bod kiezen hierna niet meer mogelijk.
         bied_rij = QHBoxLayout()
         self.bied_keuze = QComboBox()
-        self.bied_doel = QSpinBox()
-        self.bied_doel.setRange(MIDDEN_NEDERLAND.laagste_bod, 300)
-        self.bied_doel.setSingleStep(MIDDEN_NEDERLAND.bod_stap)
         self.bied_knop = QPushButton("Bied")
         self.pas_knop = QPushButton("Pas")
-        self.bied_keuze.currentTextChanged.connect(self._bijwerken_bied_doel_zichtbaar)
         self.bied_knop.clicked.connect(self._bieden_klik)
         self.pas_knop.clicked.connect(self._pas_klik)
         bied_rij.addWidget(self.bied_keuze)
-        bied_rij.addWidget(self.bied_doel)
         bied_rij.addWidget(self.bied_knop)
         bied_rij.addWidget(self.pas_knop)
         self.bied_box = QGroupBox("Bieden")
@@ -750,6 +750,14 @@ class Hoofdvenster(QWidget):
         omschrijving = " + ".join(f"{c.omschrijving} ({c.punten})" for c in gemeld)
         self.instructie_label.setText(f"{NAAM[winnaar]} meldt roem: {omschrijving} (slag {slag_nummer})")
 
+    @staticmethod
+    def _bod_label(bod: Bod) -> str:
+        """Leesbare naam voor een bod: '140 punten', of anders de naam uit
+        CONTRACTEN (bijv. 'misère', 'kereltje')."""
+        if bod.soort == "punten":
+            return f"{bod.doel} punten"
+        return CONTRACTEN[bod.soort].naam
+
     def _vraag_bieden(self, payload):
         hand = payload["hand"]
         huidig_hoogste = payload["huidig_hoogste"]
@@ -758,27 +766,25 @@ class Hoofdvenster(QWidget):
         self._variant = variant
         self._hand_tonen(hand)
         self._kijkkaart_tonen(payload["kijkkaart"])
-        huidig = f"'{huidig_hoogste}'" if huidig_hoogste is not None else "nog niemand"
+        huidig = f"'{self._bod_label(huidig_hoogste)}'" if huidig_hoogste is not None else "nog niemand"
         self.instructie_label.setText(f"Jouw beurt om te bieden. Hoogste bod tot nu toe: {huidig}.")
         self.bied_keuze.clear()
-        self.bied_keuze.addItems(sorted(GEIMPLEMENTEERD))
+        # De lijst bevat alleen boden die nu werkelijk hoger zijn dan het
+        # huidige (zie Variant.mogelijke_boden) -- kiezen uit deze lijst kan
+        # dus nooit meer een ongeldig of te laag bod opleveren, in
+        # tegenstelling tot vroeger (toen kon dat wel, met een foutmelding
+        # achteraf). Elk item draagt het echte Bod-object als itemdata, dus
+        # er hoeft bij het bieden zelf niets meer uit tekst herbouwd te
+        # worden (ook geen apart invoerveld voor het aantal punten nodig).
+        for bod in variant.mogelijke_boden(GEIMPLEMENTEERD, huidig_hoogste):
+            self.bied_keuze.addItem(self._bod_label(bod), bod)
         self.bied_box.setVisible(True)
-        self._bijwerken_bied_doel_zichtbaar()
-
-    def _bijwerken_bied_doel_zichtbaar(self):
-        self.bied_doel.setVisible(self.bied_keuze.currentText() == "punten")
 
     def _bieden_klik(self):
-        soort = self.bied_keuze.currentText()
-        doel = self.bied_doel.value() if soort == "punten" else None
-        bod = Bod(soort, doel)
-        try:
-            if not self._variant.is_hoger(bod, self._huidig_hoogste):
-                QMessageBox.warning(self, "Ongeldig bod", f"'{bod}' is niet hoger dan '{self._huidig_hoogste}'.")
-                return
-        except ValueError as e:
-            QMessageBox.warning(self, "Ongeldig bod", str(e))
-            return
+        index = self.bied_keuze.currentIndex()
+        if index < 0:
+            return  # niets hoger meer te bieden -- alleen passen kan nog
+        bod = self.bied_keuze.itemData(index)
         self._antwoord_geven(bod)
 
     def _pas_klik(self):

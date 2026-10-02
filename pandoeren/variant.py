@@ -153,6 +153,41 @@ class Variant:
         """Centen per spel (puntenspellen: zie `uitbetaling`)."""
         return {soort: c.uitbetaling for soort, c in CONTRACTEN.items() if soort != "punten"}
 
+    def mogelijke_boden(self, soorten, huidig_hoogste: Optional[Bod] = None,
+                        max_doel: int = 300) -> list:
+        """Alle boden (uit `soorten`, bijv. GEIMPLEMENTEERD) die nu een
+        geldig, hoger bod zijn dan `huidig_hoogste` -- op volgorde van sterkte.
+
+        Bedoeld om een biedkeuze-lijst mee te vullen die zich uit zichzelf al
+        beperkt tot wat werkelijk geboden mag worden, in plaats van alles te
+        tonen en pas na een klik een foutmelding te geven (zie `is_hoger`).
+        Bij 'punten' komt elk geldig doel (stappen van `bod_stap`, tot en met
+        `max_doel`) als eigen bod in de lijst terecht, net als elk ander spel.
+        """
+        kandidaten = []
+        for soort in soorten:
+            if soort == "punten":
+                doel = self.laagste_bod
+                while doel <= max_doel:
+                    bod = Bod("punten", doel)
+                    try:
+                        self.bod_rang(bod)
+                    except ValueError:
+                        doel += self.bod_stap
+                        continue
+                    if self.is_hoger(bod, huidig_hoogste):
+                        kandidaten.append(bod)
+                    doel += self.bod_stap
+            else:
+                bod = Bod(soort)
+                try:
+                    self.bod_rang(bod)
+                except ValueError:
+                    continue
+                if self.is_hoger(bod, huidig_hoogste):
+                    kandidaten.append(bod)
+        return sorted(kandidaten, key=self.bod_rang)
+
     def open_vragen(self) -> list:
         """Instellingen die nog niet door een speler bevestigd zijn."""
         return [
