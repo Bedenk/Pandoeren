@@ -30,7 +30,7 @@ import time
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QObject, Signal
-from PySide6.QtGui import QColor, QPen, QPainter, QPixmap
+from PySide6.QtGui import QColor, QIcon, QPen, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel,
     QPushButton, QComboBox, QListWidget, QListWidgetItem, QGroupBox,
@@ -56,6 +56,17 @@ WINDRICHTING = {0: "Zuid", 1: "West", 2: "Noord", 3: "Oost"}
 # namen op. Ontbreekt een scan (of de hele map), dan tekent KaartWidget de
 # kaart gewoon zelf -- er is dus niets verplicht aan te leveren.
 ASSETS_KAARTEN = Path(__file__).resolve().parent / "assets" / "kaarten"
+
+# Programma-icoon: de eigen ingescande hartenaas (assets/icon.png), gemaakt
+# van dezelfde scan als assets/kaarten/harten_aas.png. Ontbreekt het (zou
+# alleen kunnen bij een kapotte installatie), dan draait het spel gewoon
+# door zonder icoon -- vandaar de aparte functie i.p.v. QIcon() direct op
+# module-niveau.
+ASSETS_ICOON = Path(__file__).resolve().parent / "assets" / "icon.png"
+
+
+def _programma_icoon() -> QIcon:
+    return QIcon(str(ASSETS_ICOON)) if ASSETS_ICOON.exists() else QIcon()
 
 
 def _kleur_label(s: Suit) -> str:
@@ -1007,6 +1018,7 @@ class Hoofdvenster(QWidget):
 
 def main():
     app = QApplication(sys.argv)
+    app.setWindowIcon(_programma_icoon())
     venster = Hoofdvenster()
     venster.show()
     sys.exit(app.exec())

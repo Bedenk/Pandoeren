@@ -6,6 +6,13 @@ MINOR-bump (0.1.0 -> 0.2.0) mag dus ook zonder volledige achterwaartse
 compatibiliteit. Het versienummer zelf staat in `pandoeren/__init__.py`
 (`__version__`) en is te zien in de titelbalk van de Qt-client.
 
+## 0.1.1 -- 2026-10-05
+
+- Programma-icoon toegevoegd: de eigen ingescande hartenaas
+  (`assets/icon.png`/`assets/icon.ico`), zichtbaar in het venster, de
+  taakbalk en (op Windows) op `pandoeren.exe` zelf. Voor een Linux-menu-item
+  wijst `Icon=` in je `.desktop`-bestand naar `assets/icon.png`.
+
 ## 0.1.0 -- 2026-10-05
 
 Eerste versie die als los pakket is uitgedeeld, bedoeld voor de eerste

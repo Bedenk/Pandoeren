@@ -31,6 +31,7 @@ jobs:
       - name: Bouw pandoeren.exe
         run: >
           pyinstaller --onefile --windowed --name pandoeren
+          --icon "assets\icon.ico"
           --add-data "assets;assets"
           client_qt.py
       - uses: actions/upload-artifact@v4
