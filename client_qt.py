@@ -37,6 +37,7 @@ from PySide6.QtWidgets import (
     QMessageBox, QAbstractButton, QSizePolicy,
 )
 
+from pandoeren import __version__
 from pandoeren.cards import Card, Rank, Suit, sorteer
 from pandoeren.spel import EenvoudigeSpeler, GEIMPLEMENTEERD, maat_indien_onthuld, speel_ronde
 from pandoeren.spelregels import legale_kaarten
@@ -290,7 +291,7 @@ class RondeWorker(threading.Thread):
 class Hoofdvenster(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Pandoeren -- Midden-Nederland")
+        self.setWindowTitle(f"Pandoeren v{__version__}")
         self.resize(960, 960)
 
         self.brug = Brug()

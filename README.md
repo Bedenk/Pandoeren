@@ -3,6 +3,12 @@
 Het oude Nederlandse kaartspel, als Python-engine. Doel: het spel bewaren, met
 regels die per streek of familie instelbaar zijn.
 
+## Versie
+
+Huidige versie: zie `pandoeren/__init__.py` (`__version__`) -- ook te zien in
+de titelbalk van de Qt-client. Wijzigingen per versie staan in
+[`CHANGELOG.md`](CHANGELOG.md).
+
 ## Opzet
 
 | Bestand | Inhoud |
@@ -13,7 +19,9 @@ regels die per streek of familie instelbaar zijn.
 | `pandoeren/variant.py` | biedvolgorde, uitbetaling in centen, instellingen per variant |
 | `tests/` | tests |
 
-De engine kent geen scherm. De Qt-client (PySide6) komt er later bovenop.
+De engine zelf kent geen scherm; daar bovenop zitten twee losse clients:
+`client_qt.py` (PySide6, met speeltafel en kaarten) en `speeltest.py` (puur
+terminal, handig om snel te testen).
 
 ## Tests draaien
 

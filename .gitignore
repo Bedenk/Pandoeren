@@ -4,3 +4,8 @@ build/
 dist/
 *.spec
 .venv/
+bin/
+include/
+lib/
+lib64
+pyvenv.cfg

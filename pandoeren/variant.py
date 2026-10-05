@@ -198,7 +198,7 @@ class Variant:
 
 
 MIDDEN_NEDERLAND = Variant(
-    naam="Midden-Nederland (concept)",
+    naam="Pandoeren",
     zekerheid={
         "lappen": Zekerheid.BEVESTIGD,               # 10 cent
         # Laagste bod: eerst 100 herinnerd, daarna bewust gekozen voor
