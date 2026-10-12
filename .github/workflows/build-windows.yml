@@ -29,23 +29,37 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
       - name: Bouw pandoeren.exe
+        # --onedir in plaats van --onefile: --onefile pakt alles in één .exe
+        # die bij elke start zichzelf eerst uitpakt naar een tijdelijke map
+        # en vervolgens het echte programma als "child process" daaruit
+        # opstart. Op sommige (vaak extra beveiligde/zakelijke) Windows-
+        # installaties blokkeert Windows of de virusscanner die stap, met
+        # als gevolg "Failed to create child process! Create process W:
+        # Toegang geweigerd". --onedir bouwt in plaats daarvan een map met
+        # pandoeren.exe en de bijbehorende bestanden die rechtstreeks
+        # draait, zonder die kwetsbare uitpak-stap.
         run: >
-          pyinstaller --onefile --windowed --name pandoeren
+          pyinstaller --onedir --windowed --name pandoeren
           --icon "assets\icon.ico"
           --add-data "assets;assets"
           client_qt.py
+      - name: Zip de map (voor eenvoudig downloaden)
+        run: Compress-Archive -Path dist/pandoeren/* -DestinationPath dist/pandoeren-windows.zip
       - uses: actions/upload-artifact@v4
         with:
           name: pandoeren-windows
-          path: dist/pandoeren.exe
+          path: dist/pandoeren-windows.zip
       - name: Publiceer op release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
           name: "Laatste build"
-          body: "Automatisch gebouwd door GitHub Actions. Windows: pandoeren.exe. Linux: pandoeren-linux."
+          body: >
+            Automatisch gebouwd door GitHub Actions.
+            Windows: pandoeren-windows.zip (uitpakken, dan pandoeren.exe
+            starten). Linux: pandoeren-linux.
           prerelease: true
-          files: dist/pandoeren.exe
+          files: dist/pandoeren-windows.zip
 
   build-linux:
     runs-on: ubuntu-latest

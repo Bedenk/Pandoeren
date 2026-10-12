@@ -34,7 +34,7 @@ from PySide6.QtGui import QColor, QIcon, QPen, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel,
     QPushButton, QComboBox, QListWidget, QListWidgetItem, QGroupBox,
-    QMessageBox, QAbstractButton, QSizePolicy,
+    QMessageBox, QAbstractButton, QSizePolicy, QScrollArea,
 )
 
 from pandoeren import __version__
@@ -303,7 +303,6 @@ class Hoofdvenster(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle(f"Pandoeren v{__version__}")
-        self.resize(960, 960)
 
         self.brug = Brug()
         self.brug.vraag.connect(self.op_vraag, Qt.QueuedConnection)
@@ -318,7 +317,13 @@ class Hoofdvenster(QWidget):
         self._huidig_hoogste: Bod | None = None
 
         # -- lay-out --------------------------------------------------------
-        layout = QVBoxLayout(self)
+        # Alle inhoud komt in een los widget (`inhoud`) dat in een
+        # QScrollArea zit. Op een klein scherm past anders niet alles
+        # (tafel + hand + log, etc.) binnen de beschikbare hoogte, en dan
+        # kan het venster ook niet meer verkleind worden zonder dat er
+        # knoppen onbereikbaar worden -- met een scrollbalk kan dat altijd.
+        inhoud = QWidget()
+        layout = QVBoxLayout(inhoud)
 
         boven_rij = QHBoxLayout()
         self.stand_label = QLabel()
@@ -402,8 +407,42 @@ class Hoofdvenster(QWidget):
         self.log.setMaximumHeight(70)  # kleiner -- geeft ruimte aan 'gespeelde slagen' hierboven
         layout.addWidget(self.log)
 
+        buiten_layout = QVBoxLayout(self)
+        buiten_layout.setContentsMargins(0, 0, 0, 0)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(inhoud)
+        buiten_layout.addWidget(scroll)
+
+        self._schermgrootte_aanpassen()
         self._alles_verbergen()
         self._stand_bijwerken()
+
+    def _schermgrootte_aanpassen(self) -> None:
+        """Past de venstergrootte (en -positie) aan het scherm aan.
+
+        Zonder dit stond het venster altijd vast op 960x960, en op een
+        laptop met een kleiner scherm (bv. 1366x768 met een taakbalk erbij)
+        schoot het dan buiten beeld -- met als gevolg dat de knoppen om te
+        minimaliseren/maximaliseren/sluiten niet meer te zien (of te
+        bereiken) waren. Nu passen we de grootte aan het beschikbare
+        scherm aan en centreren we het venster erbinnen.
+        """
+        scherm = QApplication.primaryScreen()
+        if scherm is None:
+            self.resize(960, 960)
+            return
+        beschikbaar = scherm.availableGeometry()
+        # Nooit groter dan 960x960 (onze oorspronkelijke, prettige
+        # grootte), maar wel zo groot als het scherm toelaat, met een
+        # kleine marge zodat het venster niet precies tegen de randen
+        # van het beschikbare gebied aan komt.
+        breedte = max(min(960, beschikbaar.width() - 20), min(320, beschikbaar.width()))
+        hoogte = max(min(960, beschikbaar.height() - 40), min(320, beschikbaar.height()))
+        self.resize(breedte, hoogte)
+        x = beschikbaar.x() + (beschikbaar.width() - breedte) // 2
+        y = beschikbaar.y() + (beschikbaar.height() - hoogte) // 2
+        self.move(max(x, beschikbaar.x()), max(y, beschikbaar.y()))
 
     # -- de tafel (groen laken, windhoeken) --------------------------------
     def _bouw_tafel(self) -> QWidget:

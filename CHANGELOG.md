@@ -6,6 +6,24 @@ MINOR-bump (0.1.0 -> 0.2.0) mag dus ook zonder volledige achterwaartse
 compatibiliteit. Het versienummer zelf staat in `pandoeren/__init__.py`
 (`__version__`) en is te zien in de titelbalk van de Qt-client.
 
+## 0.1.2 -- 2026-10-12
+
+Twee meldingen van de eerste externe beta-tester (Windows 10) opgelost:
+
+- Het venster past zijn grootte nu aan het beschikbare scherm aan (en
+  wordt gecentreerd), zodat de titelbalk-knoppen (minimaliseren/
+  maximaliseren/sluiten) niet meer buiten beeld kunnen vallen op een
+  kleiner scherm. De inhoud zit nu in een scrollbalk, zodat ook een heel
+  klein scherm alles bereikbaar houdt.
+- De Windows-build gebruikt nu `--onedir` in plaats van `--onefile`.
+  `--onefile` pakt zichzelf bij elke start eerst uit naar een tijdelijke
+  map en start vanuit daar een "child process" -- dat werd op deze
+  tester haar Windows geblokkeerd ("Failed to create child process!
+  Create process W: Toegang geweigerd"), waarschijnlijk door Windows
+  Defender of mapbeveiliging. De download is nu een zip-bestand
+  (`pandoeren-windows.zip`): uitpakken en `pandoeren.exe` erin starten,
+  verder niets anders.
+
 ## 0.1.1 -- 2026-10-05
 
 - Programma-icoon toegevoegd: de eigen ingescande hartenaas
